@@ -8,7 +8,7 @@ const MOCK_ARTISTAS = [
     nomeReal: "Sebastian Moreno",
     origem: "Chile",
     tag: "Internacional",
-    avatarUrl: "/artistas/scmart.png",
+    avatarUrl: "/artistas/scmart-perfil.jpg",
     instagram: "@s.cmart_",
   },
 ];
