@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -37,8 +39,14 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
       </div>
 
       <div className="p-3 flex flex-col gap-1">
-        <p className="text-xs text-text-muted font-body">
-          {product.artistName}
+        <p className="text-xs text-text-muted font-body hover:text-primary transition-colors">
+          <a
+            href={`/artistas/${product.artistSlug}`}
+            onClick={(e) => e.stopPropagation()}
+            className="hover:underline"
+          >
+            {product.artistName}
+          </a>
         </p>
         <h2 className="text-sm font-display font-semibold text-text leading-snug line-clamp-2">
           {product.name}
