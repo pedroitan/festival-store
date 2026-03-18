@@ -3,34 +3,46 @@ import ProductGrid from "@/components/vitrine/ProductGrid";
 import type { ProductCardData } from "@/components/vitrine/ProductCard";
 
 const MOCK_ARTIST = {
-  slug: "neocrash",
-  name: "Neocrash",
-  bio: "Grafiteiro radicado em Salvador-BA. Trabalha com letras e formas geométricas que misturam influências do graffiti com circuitos eletrônicos. Participante do BTC desde a 5ª edição.",
-  avatarUrl: "https://placehold.co/200x200/E8E8E8/6B6B6B?text=NC",
-  instagram: "@neocrash",
-  tier: "Prata",
+  slug: "scmart",
+  name: "Scmart",
+  nomeReal: "Sebastian Moreno",
+  origem: "Chile",
+  bio: "Sebastian é um artista visual e muralista com uma sólida trajetória internacional, tendo levado sua arte a sete países através de festivais de renome como o Meeting of Styles (Alemanha, Suécia, Finlândia, Jamaica, entre outros). Sua obra é uma busca pela harmonia entre a estética urbana e a natureza, transformando muros em palcos de experimentação técnica e visual, com peças dinâmicas e ricas em nuances de cor.",
+  avatarUrl: "/artistas/scmart.png",
+  instagram: "@s.cmart_",
+  tier: "Destaque",
 };
 
 const MOCK_PRODUCTS: ProductCardData[] = [
   {
-    id: "1",
-    slug: "urban-roots-tshirt",
-    name: "Urban Roots — Camiseta",
-    artistName: "Neocrash",
-    artistSlug: "neocrash",
+    id: "sc-1",
+    slug: "scmart-natureza-urbana-camiseta",
+    name: "Natureza Urbana — Camiseta",
+    artistName: "Scmart",
+    artistSlug: "scmart",
     price: 89,
-    imageUrl: "https://placehold.co/600x600/F3F3F3/6B6B6B?text=Urban+Roots",
+    imageUrl: "https://placehold.co/600x600/0B12CC/FFFFFF?text=Scmart",
     category: "Camiseta",
   },
   {
-    id: "2",
-    slug: "circuito-ancestral-print",
-    name: "Circuito Ancestral — Fine Art",
-    artistName: "Neocrash",
-    artistSlug: "neocrash",
-    price: 229,
-    imageUrl: "https://placehold.co/600x600/F3F3F3/6B6B6B?text=Circuito",
-    category: "Fine Art",
+    id: "sc-2",
+    slug: "scmart-mural-chile-poster",
+    name: "Mural Chile — Pôster Fine Art",
+    artistName: "Scmart",
+    artistSlug: "scmart",
+    price: 129,
+    imageUrl: "https://placehold.co/600x600/0B12CC/FFFFFF?text=P%C3%B4ster",
+    category: "Pôster",
+  },
+  {
+    id: "sc-3",
+    slug: "scmart-meeting-styles-tela",
+    name: "Meeting of Styles — Tela s/ Moldura",
+    artistName: "Scmart",
+    artistSlug: "scmart",
+    price: 179,
+    imageUrl: "https://placehold.co/600x600/0B12CC/FFFFFF?text=Tela",
+    category: "Tela",
   },
 ];
 
@@ -55,8 +67,11 @@ export default function ArtistPage() {
             <span className="text-xs font-body font-medium uppercase tracking-widest text-text-muted border border-border px-2 py-0.5 rounded-sm">
               {MOCK_ARTIST.tier}
             </span>
+            <span className="text-xs font-body font-medium uppercase tracking-widest text-text-muted border border-border px-2 py-0.5 rounded-sm">
+              {MOCK_ARTIST.origem} · Internacional
+            </span>
           </div>
-          <p className="text-sm text-text-muted">{MOCK_ARTIST.instagram}</p>
+          <p className="text-sm text-text-muted">{MOCK_ARTIST.nomeReal} · {MOCK_ARTIST.instagram}</p>
           <p className="text-sm text-text-muted leading-relaxed mt-2 max-w-xl">
             {MOCK_ARTIST.bio}
           </p>
