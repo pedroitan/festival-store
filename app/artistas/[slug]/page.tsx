@@ -21,7 +21,7 @@ const MOCK_PRODUCTS: ProductCardData[] = [
     artistName: "Scmart",
     artistSlug: "scmart",
     price: 89,
-    imageUrl: "https://placehold.co/600x600/0B12CC/FFFFFF?text=Scmart",
+    imageUrl: "/produtos/scmart/camiseta-lifestyle.png",
     category: "Camiseta",
   },
   {
@@ -31,7 +31,7 @@ const MOCK_PRODUCTS: ProductCardData[] = [
     artistName: "Scmart",
     artistSlug: "scmart",
     price: 129,
-    imageUrl: "https://placehold.co/600x600/0B12CC/FFFFFF?text=P%C3%B4ster",
+    imageUrl: "/produtos/scmart/tela-vertical.png",
     category: "Pôster",
   },
   {
@@ -41,7 +41,7 @@ const MOCK_PRODUCTS: ProductCardData[] = [
     artistName: "Scmart",
     artistSlug: "scmart",
     price: 179,
-    imageUrl: "https://placehold.co/600x600/0B12CC/FFFFFF?text=Tela",
+    imageUrl: "/produtos/scmart/tela-vertical.png",
     category: "Tela",
   },
 ];
