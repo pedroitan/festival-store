@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useTenant } from "@/components/TenantProvider";
 import { useCartStore } from "@/store/cart";
 import { useEffect, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 
 export default function Navbar() {
-  const tenant = useTenant();
   const itemCount = useCartStore((s) => s.itemCount());
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -32,10 +30,9 @@ export default function Navbar() {
         aria-hidden="true"
         style={{
           position: "absolute",
-          top: "50%",
-          transform: "translateY(-50%)",
+          top: "6px",
           right: "clamp(80px, 9vw, 180px)",
-          height: "54px",
+          height: "100px",
           width: "auto",
           zIndex: 10,
           pointerEvents: "none",
