@@ -13,7 +13,7 @@ export type ProductCardData = {
 };
 
 function formatPrice(price: number): string {
-  return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
 export default function ProductCard({ product }: { product: ProductCardData }) {
