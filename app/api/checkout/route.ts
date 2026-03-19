@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     const body: CheckoutBody = await req.json();
 
     // Buscar tenant BTC Festival
-    const { data: tenant } = await supabaseAdmin
+    const { data: tenant } = await supabaseAdmin()
       .from("tenants")
       .select("id")
       .eq("slug", "btcfestival")
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Criar pedido no Supabase
-    const { data: order, error: orderError } = await supabaseAdmin
+    const { data: order, error: orderError } = await supabaseAdmin()
       .from("orders")
       .insert({
         tenant_id: tenant.id,
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Inserir itens do pedido
-    await supabaseAdmin.from("order_items").insert(
+    await supabaseAdmin().from("order_items").insert(
       body.items.map((item) => ({
         order_id: order.id,
         product_id: item.productId,
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
 
     // Atualizar pedido com dados do PIX
     if (paymentId) {
-      await supabaseAdmin
+      await supabaseAdmin()
         .from("orders")
         .update({ payment_id: paymentId, pix_qr_code: pixQrCode, pix_qr_code_base64: pixQrCodeBase64 })
         .eq("id", order.id);

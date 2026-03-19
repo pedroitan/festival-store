@@ -109,11 +109,10 @@ export default function ProductPageClient({ product }: { product: ProductData })
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`w-12 h-12 text-sm font-body font-medium rounded-sm border transition-colors ${
-                      selectedSize === size
+                    className={`w-12 h-12 min-w-[44px] min-h-[44px] text-sm font-body font-medium rounded-sm border transition-colors ${selectedSize === size
                         ? "bg-primary text-text-inverse border-primary"
                         : "bg-surface text-text border-border hover:border-primary"
-                    }`}
+                      }`}
                   >
                     {size}
                   </button>

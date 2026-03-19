@@ -44,7 +44,7 @@ export default async function ArtistPage({ params }: { params: { slug: string } 
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      <div className="flex items-start gap-5 mb-10 pb-10 border-b border-border">
+      <div className="flex flex-col sm:flex-row items-start gap-5 mb-10 pb-10 border-b border-border">
         <div className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-alt flex-shrink-0">
           {artist.avatar_url ? (
             <Image

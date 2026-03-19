@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     };
     const newStatus = statusMap[mpStatus] ?? "pending";
 
-    await supabaseAdmin
+    await supabaseAdmin()
       .from("orders")
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq("id", orderId);

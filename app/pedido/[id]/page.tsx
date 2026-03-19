@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import PixPanel from "./PixPanel";
 
 async function getOrder(id: string) {
-  const { data } = await supabaseAdmin
+  const { data } = await supabaseAdmin()
     .from("orders")
     .select("*, order_items(*)")
     .eq("id", id)
