@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export type ProductCardData = {
   id: string;
@@ -19,6 +20,8 @@ function formatPrice(price: number): string {
 }
 
 export default function ProductCard({ product }: { product: ProductCardData }) {
+  const router = useRouter();
+
   return (
     <Link
       href={`/produtos/${product.slug}`}
@@ -39,15 +42,20 @@ export default function ProductCard({ product }: { product: ProductCardData }) {
       </div>
 
       <div className="p-3 flex flex-col gap-1">
-        <p className="text-xs text-text-muted font-body hover:text-primary transition-colors">
-          <a
-            href={`/artistas/${product.artistSlug}`}
-            onClick={(e) => e.stopPropagation()}
-            className="hover:underline"
-          >
-            {product.artistName}
-          </a>
-        </p>
+        <span
+          role="link"
+          tabIndex={0}
+          onClick={(e) => {
+            e.preventDefault();
+            router.push(`/artistas/${product.artistSlug}`);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") router.push(`/artistas/${product.artistSlug}`);
+          }}
+          className="text-xs text-text-muted font-body hover:text-primary hover:underline transition-colors cursor-pointer w-fit"
+        >
+          {product.artistName}
+        </span>
         <h2 className="text-sm font-display font-semibold text-text leading-snug line-clamp-2">
           {product.name}
         </h2>

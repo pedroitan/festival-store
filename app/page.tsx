@@ -1,70 +1,34 @@
 import ProductGrid from "@/components/vitrine/ProductGrid";
 import type { ProductCardData } from "@/components/vitrine/ProductCard";
+import { supabase } from "@/lib/supabase";
 
-const MOCK_PRODUCTS: ProductCardData[] = [
-  {
-    id: "sc-1",
-    slug: "scmart-natureza-urbana-camiseta",
-    name: "Natureza Urbana — Camiseta",
-    artistName: "Scmart",
-    artistSlug: "scmart",
-    price: 89,
-    imageUrl: "/produtos/scmart/camiseta-lifestyle.png",
-    category: "Camiseta",
-  },
-  {
-    id: "sc-2",
-    slug: "scmart-mural-chile-poster",
-    name: "Mural Chile — Pôster Fine Art",
-    artistName: "Scmart",
-    artistSlug: "scmart",
-    price: 129,
-    imageUrl: "/produtos/scmart/tela-vertical.png",
-    category: "Pôster",
-  },
-  {
-    id: "sc-3",
-    slug: "scmart-meeting-styles-tela",
-    name: "Meeting of Styles — Tela s/ Moldura",
-    artistName: "Scmart",
-    artistSlug: "scmart",
-    price: 179,
-    imageUrl: "/produtos/scmart/tela-vertical.png",
-    category: "Tela",
-  },
-  {
-    id: "sc-4",
-    slug: "scmart-harmonia-bone",
-    name: "Harmonia — Boné",
-    artistName: "Scmart",
-    artistSlug: "scmart",
-    price: 79,
-    imageUrl: "/produtos/scmart/camiseta-lifestyle.png",
-    category: "Boné",
-  },
-  {
-    id: "sc-5",
-    slug: "scmart-meeting-styles-tela-moldura",
-    name: "Meeting of Styles — Tela c/ Moldura",
-    artistName: "Scmart",
-    artistSlug: "scmart",
-    price: 249,
-    imageUrl: "/produtos/scmart/tela-vertical.png",
-    category: "Tela",
-  },
-  {
-    id: "sc-6",
-    slug: "scmart-cor-movimento-poster",
-    name: "Cor e Movimento — Pôster",
-    artistName: "Scmart",
-    artistSlug: "scmart",
-    price: 79,
-    imageUrl: "/produtos/scmart/tela-vertical.png",
-    category: "Pôster",
-  },
-];
+async function getProducts(): Promise<ProductCardData[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("id, slug, name, price, category, image_url, artist:artists(slug, name)")
+    .eq("active", true)
+    .order("created_at", { ascending: true });
 
-export default function Home() {
+  if (error || !data) return [];
+
+  return data.map((p) => {
+    const artist = Array.isArray(p.artist) ? p.artist[0] : p.artist;
+    return {
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      price: Math.round(p.price / 100),
+      category: p.category,
+      imageUrl: p.image_url ?? "/produtos/placeholder.png",
+      artistName: artist?.name ?? "",
+      artistSlug: artist?.slug ?? "",
+    };
+  });
+}
+
+export default async function Home() {
+  const products = await getProducts();
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       <section className="mb-10">
@@ -76,7 +40,7 @@ export default function Home() {
         </p>
       </section>
 
-      <ProductGrid products={MOCK_PRODUCTS} />
+      <ProductGrid products={products} />
     </main>
   );
 }
