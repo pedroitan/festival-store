@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 type CheckoutItem = {
   productId: string;
@@ -144,6 +147,73 @@ export async function POST(req: NextRequest) {
         .from("orders")
         .update({ payment_id: paymentId, pix_qr_code: pixQrCode, pix_qr_code_base64: pixQrCodeBase64 })
         .eq("id", order.id);
+    }
+
+    // Enviar email de confirmação via Resend
+    try {
+      const shortId = order.id.slice(0, 8).toUpperCase();
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://festival-store.vercel.app";
+      const formatPrice = (cents: number) =>
+        (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+      const itemsHtml = body.items
+        .map(
+          (i) =>
+            `<tr>
+              <td style="padding:8px 0;border-bottom:1px solid #222;font-size:14px;color:#ccc">${i.name}<br/><span style="font-size:12px;color:#888">${i.artistName}</span></td>
+              <td style="padding:8px 0;border-bottom:1px solid #222;text-align:right;font-size:14px;color:#ccc">${formatPrice(i.price * i.quantity)}</td>
+            </tr>`
+        )
+        .join("");
+
+      const pixSection = pixQrCode
+        ? `<div style="background:#111;border:1px solid #222;border-radius:8px;padding:20px;margin:24px 0">
+            <p style="margin:0 0 8px;font-size:13px;color:#aaa;text-transform:uppercase;letter-spacing:1px">Código PIX Copia e Cola</p>
+            <code style="display:block;background:#000;border:1px solid #333;border-radius:4px;padding:12px;font-size:11px;color:#0B12CC;word-break:break-all">${pixQrCode}</code>
+            <p style="margin:12px 0 0;font-size:12px;color:#666">Cole no app do seu banco. Aprovação instantânea.</p>
+          </div>`
+        : `<p style="color:#aaa;font-size:14px">Acesse o link abaixo para ver o QR Code PIX.</p>`;
+
+      await resend.emails.send({
+        from: process.env.RESEND_FROM ?? "Festival Store <onboarding@resend.dev>",
+        to: body.customer.email,
+        subject: `Pedido #${shortId} — Aguardando pagamento`,
+        html: `
+<!DOCTYPE html>
+<html>
+<body style="background:#0a0a0a;font-family:sans-serif;margin:0;padding:32px 16px">
+  <div style="max-width:560px;margin:0 auto">
+    <p style="color:#0B12CC;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px">BAHIA DE TODAS AS CORES</p>
+    <h1 style="color:#fff;font-size:22px;margin:0 0 4px">Pedido recebido!</h1>
+    <p style="color:#aaa;font-size:14px;margin:0 0 24px">Pedido <strong style="color:#fff">#${shortId}</strong></p>
+
+    ${pixSection}
+
+    <div style="background:#111;border:1px solid #222;border-radius:8px;padding:20px;margin-bottom:16px">
+      <p style="margin:0 0 12px;font-size:13px;color:#aaa;text-transform:uppercase;letter-spacing:1px">Itens do pedido</p>
+      <table style="width:100%;border-collapse:collapse">${itemsHtml}</table>
+      <table style="width:100%;margin-top:12px">
+        <tr>
+          <td style="font-size:13px;color:#aaa;padding:4px 0">Frete</td>
+          <td style="font-size:13px;color:#aaa;text-align:right;padding:4px 0">${body.shippingCost === 0 ? "Grátis" : formatPrice(body.shippingCost)}</td>
+        </tr>
+        <tr>
+          <td style="font-size:15px;color:#fff;font-weight:bold;padding:8px 0 0">Total</td>
+          <td style="font-size:15px;color:#fff;font-weight:bold;text-align:right;padding:8px 0 0">${formatPrice(body.total)}</td>
+        </tr>
+      </table>
+    </div>
+
+    <a href="${siteUrl}/pedido/${order.id}" style="display:inline-block;background:#0B12CC;color:#fff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:bold">Ver meu pedido</a>
+
+    <p style="color:#555;font-size:12px;margin-top:24px">Entrega em até 10 dias úteis após confirmação do pagamento.</p>
+  </div>
+</body>
+</html>`,
+      });
+    } catch (emailError) {
+      console.error("Resend error:", emailError);
+      // Não bloqueia a resposta
     }
 
     return NextResponse.json({
