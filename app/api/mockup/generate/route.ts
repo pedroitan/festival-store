@@ -51,14 +51,13 @@ export async function POST(req: NextRequest) {
       ],
     });
 
-    const parts = response.candidates?.[0]?.content?.parts ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const parts: any[] = response.candidates?.[0]?.content?.parts ?? [];
 
-    const imagePart = parts.find(
-      (p: { inlineData?: { data: string; mimeType: string } }) => p.inlineData
-    );
+    const imagePart = parts.find((p) => p.inlineData);
 
     if (!imagePart?.inlineData) {
-      const textPart = parts.find((p: { text?: string }) => p.text);
+      const textPart = parts.find((p) => p.text);
       return NextResponse.json(
         { error: "Gemini não retornou imagem", detail: textPart?.text ?? "sem detalhes" },
         { status: 502 }
