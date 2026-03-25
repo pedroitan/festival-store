@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useCartStore } from "@/store/cart";
-import { ShoppingBag, ChevronDown } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 
 const SIZES = ["P", "M", "G", "GG"];
-const SIZES_NAOTEM = ["Boné", "Tela", "Pôster"];
+const SIZES_CATEGORIAS = ["Camiseta"];
 
 type ProductData = {
   id: string;
@@ -31,9 +31,8 @@ function formatPrice(price: number) {
 }
 
 export default function ProductPageClient({ product }: { product: ProductData }) {
-  const needsSize = !SIZES_NAOTEM.includes(product.category);
+  const needsSize = SIZES_CATEGORIAS.includes(product.category);
   const [selectedSize, setSelectedSize] = useState<string | null>(needsSize ? null : "UNICO");
-  const [specsOpen, setSpecsOpen] = useState(false);
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
 
@@ -110,8 +109,8 @@ export default function ProductPageClient({ product }: { product: ProductData })
                     key={size}
                     onClick={() => setSelectedSize(size)}
                     className={`w-12 h-12 min-w-[44px] min-h-[44px] text-sm font-body font-medium rounded-sm border transition-colors ${selectedSize === size
-                        ? "bg-primary text-text-inverse border-primary"
-                        : "bg-surface text-text border-border hover:border-primary"
+                      ? "bg-primary text-text-inverse border-primary"
+                      : "bg-surface text-text border-border hover:border-primary"
                       }`}
                   >
                     {size}
@@ -166,21 +165,6 @@ export default function ProductPageClient({ product }: { product: ProductData })
             </div>
           )}
 
-          {/* Specs */}
-          <div className="border-t border-border pt-4">
-            <button
-              onClick={() => setSpecsOpen((v) => !v)}
-              className="flex items-center justify-between w-full text-sm font-body font-medium text-text"
-            >
-              Informações de impressão
-              <ChevronDown size={16} className={`transition-transform ${specsOpen ? "rotate-180" : ""}`} />
-            </button>
-            {specsOpen && (
-              <p className="mt-3 text-sm text-text-muted leading-relaxed">
-                Impressão DTF — durabilidade superior a 50 lavagens. Arte posicionada na frente central. Produzido sob demanda.
-              </p>
-            )}
-          </div>
         </div>
       </div>
     </main>

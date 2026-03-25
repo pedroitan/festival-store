@@ -51,7 +51,6 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {/* Nav desktop */}
           <nav className="hidden md:flex items-center gap-6 text-sm" style={{ color: "rgba(255,255,255,0.75)" }}>
-            <Link href="/artistas" className="hover:text-white transition-colors">Artistas</Link>
             <Link href="/produtos" className="hover:text-white transition-colors">Produtos</Link>
           </nav>
 
@@ -105,13 +104,6 @@ export default function Navbar() {
           }}
         >
           <nav className="flex flex-col px-4 py-3 gap-1">
-            <Link
-              href="/artistas"
-              className="py-3 text-sm font-body font-medium border-b"
-              style={{ color: "rgba(255,255,255,0.85)", borderColor: "rgba(255,255,255,0.08)" }}
-            >
-              Artistas
-            </Link>
             <Link
               href="/produtos"
               className="py-3 text-sm font-body font-medium"

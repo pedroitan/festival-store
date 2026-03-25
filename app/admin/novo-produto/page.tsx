@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-
-type Artist = { id: string; name: string; slug: string };
 
 const PRODUCTS = [
   { key: "camiseta", label: "Camiseta", price: 89 },
@@ -56,10 +54,7 @@ function compressImage(file: File, maxPx = 1200, quality = 0.85): Promise<{ base
 export default function NovoProductPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [artists, setArtists] = useState<Artist[]>([]);
-  const [artistsError, setArtistsError] = useState("");
-  const [artistId, setArtistId] = useState("");
-  const [artistSlug, setArtistSlug] = useState("");
+  const [artistName, setArtistName] = useState("");
 
   const [artName, setArtName] = useState("");
   const [description, setDescription] = useState("");
@@ -82,21 +77,6 @@ export default function NovoProductPage() {
   const [savedProducts, setSavedProducts] = useState<string[]>([]);
   const [saveError, setSaveError] = useState("");
 
-  useEffect(() => {
-    supabase
-      .from("artists")
-      .select("id, name, slug")
-      .then(({ data, error }) => {
-        if (error) { setArtistsError(error.message); return; }
-        if (data && data.length > 0) {
-          setArtists(data);
-          setArtistId(data[0].id);
-          setArtistSlug(data[0].slug);
-        } else {
-          setArtistsError("Nenhum artista encontrado no banco.");
-        }
-      });
-  }, []);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -142,7 +122,7 @@ export default function NovoProductPage() {
 
   async function handleSaveAll() {
     if (!artName.trim()) { setSaveError("Nome da arte é obrigatório"); return; }
-    if (!artistId) { setSaveError("Selecione um artista"); return; }
+    if (!artistName.trim()) { setSaveError("Nome do artista é obrigatório"); return; }
 
     const toSave = PRODUCTS.filter((p) => mockups[p.key].enabled && mockups[p.key].status === "done");
     if (toSave.length === 0) { setSaveError("Nenhum mockup gerado para salvar"); return; }
@@ -152,6 +132,16 @@ export default function NovoProductPage() {
 
     const { data: tenant } = await supabase.from("tenants").select("id").eq("slug", "btcfestival").single();
     if (!tenant) { setSaveError("Tenant btcfestival não encontrado"); setSaving(false); return; }
+
+    const artistRes = await fetch("/api/admin/artists", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: artistName.trim(), tenant_id: tenant.id }),
+    });
+    const artistData = await artistRes.json();
+    if (artistData.error) { setSaveError(`Erro ao salvar artista: ${artistData.error}`); setSaving(false); return; }
+    const artistId = artistData.artist.id;
+    const artistSlug = artistData.artist.slug;
 
     const artSlug = slugify(artName);
     const artworkStoredUrl = artPreviewUrl;
@@ -207,21 +197,16 @@ export default function NovoProductPage() {
 
         {/* Artista */}
         <div>
-          <label className="block text-xs font-body uppercase tracking-widest text-text-muted mb-1">Artista</label>
-          {artistsError ? (
-            <p className="text-sm text-red-600 font-mono">{artistsError}</p>
-          ) : (
-            <select
-              value={artistId}
-              onChange={(e) => {
-                setArtistId(e.target.value);
-                const a = artists.find((x) => x.id === e.target.value);
-                if (a) setArtistSlug(a.slug);
-              }}
-              className="w-full bg-surface border border-border rounded-md px-3 py-2.5 text-sm text-text focus:outline-none focus:border-primary"
-            >
-              {artists.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
+          <label className="block text-xs font-body uppercase tracking-widest text-text-muted mb-1">Nome do Artista</label>
+          <input
+            type="text"
+            value={artistName}
+            onChange={(e) => setArtistName(e.target.value)}
+            placeholder="ex: SCMart"
+            className="w-full bg-surface border border-border rounded-md px-3 py-2.5 text-sm text-text focus:outline-none focus:border-primary"
+          />
+          {artistName && (
+            <p className="text-xs text-text-muted mt-1 font-mono">slug: {slugify(artistName)}</p>
           )}
         </div>
 
@@ -235,8 +220,8 @@ export default function NovoProductPage() {
             placeholder="ex: Natureza Urbana"
             className="w-full bg-surface border border-border rounded-md px-3 py-2.5 text-sm text-text focus:outline-none focus:border-primary"
           />
-          {artName && artistSlug && (
-            <p className="text-xs text-text-muted mt-1 font-mono">slug base: {artistSlug}-{slugify(artName)}</p>
+          {artName && artistName && (
+            <p className="text-xs text-text-muted mt-1 font-mono">slug base: {slugify(artistName)}-{slugify(artName)}</p>
           )}
         </div>
 
