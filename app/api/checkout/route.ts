@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const getResend = () => new Resend(process.env.RESEND_API_KEY);
 
 type CheckoutItem = {
   productId: string;
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
           </div>`
         : `<p style="color:#aaa;font-size:14px">Acesse o link abaixo para ver o QR Code PIX.</p>`;
 
-      await resend.emails.send({
+      await getResend().emails.send({
         from: process.env.RESEND_FROM ?? "Festival Store <onboarding@resend.dev>",
         to: body.customer.email,
         subject: `Pedido #${shortId} — Aguardando pagamento`,
