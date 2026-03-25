@@ -48,6 +48,16 @@ export default async function PedidoPage({ params }: { params: { id: string } })
           total={order.total}
         />
       )}
+      {isPending && !order.pix_qr_code && (
+        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-md p-4 mb-6">
+          <p className="text-yellow-300 font-body font-semibold text-sm mb-1">QR Code PIX indisponível</p>
+          <p className="text-yellow-200/60 text-xs">
+            Não foi possível gerar o QR Code automaticamente. Entre em contato pelo Instagram{" "}
+            <strong className="text-yellow-200">@btcfestival</strong> informando o pedido{" "}
+            <strong className="text-yellow-200">#{shortId}</strong> para receber o código PIX.
+          </p>
+        </div>
+      )}
 
       {isPaid && (
         <div className="bg-green-900/20 border border-green-500/30 rounded-md p-4 mb-6">

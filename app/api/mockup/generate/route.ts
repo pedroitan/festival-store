@@ -23,10 +23,11 @@ async function fetchImageAsBase64(url: string): Promise<{ base64: string; mimeTy
 
 export async function POST(req: NextRequest) {
   try {
-    const { artworkUrl, productType = "camiseta" } = await req.json();
+    const body = await req.json();
+    const { artworkUrl, artworkBase64, artworkMimeType, productType = "camiseta" } = body;
 
-    if (!artworkUrl) {
-      return NextResponse.json({ error: "artworkUrl é obrigatório" }, { status: 400 });
+    if (!artworkUrl && !artworkBase64) {
+      return NextResponse.json({ error: "artworkUrl ou artworkBase64 é obrigatório" }, { status: 400 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -35,7 +36,9 @@ export async function POST(req: NextRequest) {
     }
 
     const prompt = PRODUCT_PROMPTS[productType] ?? PRODUCT_PROMPTS.camiseta;
-    const { base64, mimeType } = await fetchImageAsBase64(artworkUrl);
+    const { base64, mimeType } = artworkBase64
+      ? { base64: artworkBase64, mimeType: artworkMimeType ?? "image/png" }
+      : await fetchImageAsBase64(artworkUrl);
 
     const ai = new GoogleGenAI({ apiKey });
 

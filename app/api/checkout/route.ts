@@ -41,7 +41,10 @@ async function createPixPayment(body: CheckoutBody, orderId: string) {
 
   const cpf = body.customer.cpf.replace(/\D/g, "");
 
-  const payload = {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const isPublicUrl = siteUrl.startsWith("https://");
+
+  const payload: Record<string, unknown> = {
     transaction_amount: body.total / 100,
     description: `Festival Store — Pedido ${orderId.slice(0, 8).toUpperCase()}`,
     payment_method_id: "pix",
@@ -51,9 +54,12 @@ async function createPixPayment(body: CheckoutBody, orderId: string) {
       last_name: body.customer.name.split(" ").slice(1).join(" ") || "-",
       identification: { type: "CPF", number: cpf },
     },
-    notification_url: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/mercadopago`,
     external_reference: orderId,
   };
+
+  if (isPublicUrl) {
+    payload.notification_url = `${siteUrl}/api/webhooks/mercadopago`;
+  }
 
   const res = await fetch("https://api.mercadopago.com/v1/payments", {
     method: "POST",
@@ -130,15 +136,16 @@ export async function POST(req: NextRequest) {
     let pixQrCode: string | null = null;
     let pixQrCodeBase64: string | null = null;
     let paymentId: string | null = null;
+    let mpDiag: string | null = null;
 
     try {
       const payment = await createPixPayment(body, order.id);
       pixQrCode = payment.point_of_interaction?.transaction_data?.qr_code ?? null;
       pixQrCodeBase64 = payment.point_of_interaction?.transaction_data?.qr_code_base64 ?? null;
       paymentId = String(payment.id);
+      mpDiag = `OK | status:${payment.status} | qr:${pixQrCode ? "yes" : "null"} | base64:${pixQrCodeBase64 ? "yes" : "null"}`;
     } catch (mpError) {
-      console.error("Mercado Pago error:", mpError);
-      // Não falha o pedido — apenas salva sem PIX (pode ser configurado depois)
+      mpDiag = `ERROR: ${mpError instanceof Error ? mpError.message : String(mpError)}`;
     }
 
     // Atualizar pedido com dados do PIX
@@ -166,11 +173,17 @@ export async function POST(req: NextRequest) {
         )
         .join("");
 
+      const qrImageTag = pixQrCodeBase64
+        ? `<img src="data:image/png;base64,${pixQrCodeBase64}" alt="QR Code PIX" width="180" height="180" style="display:block;border-radius:6px;margin-bottom:16px" />`
+        : "";
+
       const pixSection = pixQrCode
         ? `<div style="background:#111;border:1px solid #222;border-radius:8px;padding:20px;margin:24px 0">
-            <p style="margin:0 0 8px;font-size:13px;color:#aaa;text-transform:uppercase;letter-spacing:1px">Código PIX Copia e Cola</p>
-            <code style="display:block;background:#000;border:1px solid #333;border-radius:4px;padding:12px;font-size:11px;color:#0B12CC;word-break:break-all">${pixQrCode}</code>
-            <p style="margin:12px 0 0;font-size:12px;color:#666">Cole no app do seu banco. Aprovação instantânea.</p>
+            <p style="margin:0 0 12px;font-size:13px;color:#aaa;text-transform:uppercase;letter-spacing:1px">Pagar com PIX</p>
+            ${qrImageTag}
+            <p style="margin:0 0 8px;font-size:12px;color:#aaa">Ou copie o código abaixo no app do seu banco:</p>
+            <code style="display:block;background:#000;border:1px solid #333;border-radius:4px;padding:12px;font-size:11px;color:#4fc3f7;word-break:break-all;line-height:1.6">${pixQrCode}</code>
+            <p style="margin:12px 0 0;font-size:12px;color:#555">Selecione o código acima, copie e cole no app do banco. Aprovação instantânea.</p>
           </div>`
         : `<p style="color:#aaa;font-size:14px">Acesse o link abaixo para ver o QR Code PIX.</p>`;
 
@@ -221,6 +234,7 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       pixQrCode,
       pixQrCodeBase64,
+      _mpDiag: mpDiag,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

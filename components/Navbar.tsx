@@ -24,25 +24,6 @@ export default function Navbar() {
         backgroundPosition: "top center",
       }}
     >
-      {/* Personagem — oculto em telas < 480px para não sobrepor carrinho */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/tenants/btcfestival/personagem1.png"
-        alt=""
-        aria-hidden="true"
-        className="hidden sm:block"
-        style={{
-          position: "absolute",
-          top: "6px",
-          right: "clamp(80px, 9vw, 180px)",
-          height: "100px",
-          width: "auto",
-          zIndex: 10,
-          pointerEvents: "none",
-          userSelect: "none",
-        }}
-      />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between relative z-20">
 
         {/* Brand */}
@@ -98,6 +79,19 @@ export default function Navbar() {
           >
             {menuOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
           </button>
+
+          {/* Personagem — último item do grupo, nunca sobrepõe elementos clicáveis */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <div
+            aria-hidden="true"
+            style={{ height: "64px", overflow: "hidden", flexShrink: 0, pointerEvents: "none", userSelect: "none" }}
+          >
+            <img
+              src="/tenants/btcfestival/personagem1.png"
+              alt=""
+              style={{ height: "82px", width: "auto", display: "block", marginTop: "8px" }}
+            />
+          </div>
         </div>
       </div>
 
