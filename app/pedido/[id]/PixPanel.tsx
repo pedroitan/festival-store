@@ -23,7 +23,7 @@ export default function PixPanel({ qrCode, qrCodeBase64, total }: Props) {
   }
 
   return (
-    <div className="bg-surface border border-border rounded-md p-5 mb-6">
+    <div className="bg-surface border border-border rounded-md p-5 mb-6 overflow-hidden">
       <h2 className="text-sm font-display font-bold text-text uppercase tracking-widest mb-4">
         Pagar com PIX
       </h2>
@@ -31,7 +31,7 @@ export default function PixPanel({ qrCode, qrCodeBase64, total }: Props) {
       <div className="flex flex-col sm:flex-row gap-6 items-start">
         {/* QR Code */}
         {qrCodeBase64 && (
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 mx-auto sm:mx-0">
             <img
               src={`data:image/png;base64,${qrCodeBase64}`}
               alt="QR Code PIX"
@@ -40,7 +40,7 @@ export default function PixPanel({ qrCode, qrCodeBase64, total }: Props) {
           </div>
         )}
 
-        <div className="flex flex-col gap-3 flex-1 min-w-0">
+        <div className="flex flex-col gap-3 w-full min-w-0 overflow-hidden">
           <p className="text-sm text-text-muted leading-relaxed">
             Escaneie o QR Code ou copie o código abaixo no app do seu banco. Aprovação em segundos.
           </p>
@@ -49,9 +49,9 @@ export default function PixPanel({ qrCode, qrCodeBase64, total }: Props) {
             {formatPrice(total)}
           </p>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 w-full min-w-0">
             <p className="text-xs text-text-muted uppercase tracking-widest">Código PIX Copia e Cola</p>
-            <code className="block w-full bg-surface-alt border border-border rounded-md px-3 py-2 text-xs font-mono text-text-muted truncate">
+            <code className="block w-full max-w-full bg-surface-alt border border-border rounded-md px-3 py-2 text-xs font-mono text-text-muted overflow-hidden text-ellipsis whitespace-nowrap">
               {qrCode}
             </code>
             <button
