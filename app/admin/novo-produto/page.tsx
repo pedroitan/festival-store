@@ -108,28 +108,27 @@ export default function NovoProductPage() {
       Object.fromEntries(Object.entries(prev).map(([k, v]) => [k, { ...v, status: "loading", base64: "", error: "" }]))
     );
 
-    await Promise.all(
-      PRODUCTS.map(async (p) => {
-        try {
-          const res = await fetch("/api/mockup/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ artworkBase64: artBase64, artworkMimeType: artMime, productType: p.key }),
-          });
-          const data = await res.json();
-          if (data.error) throw new Error(data.error);
-          setMockups((prev) => ({
-            ...prev,
-            [p.key]: { ...prev[p.key], status: "done", base64: data.imageBase64, mime: data.mimeType ?? "image/png" },
-          }));
-        } catch (err) {
-          setMockups((prev) => ({
-            ...prev,
-            [p.key]: { ...prev[p.key], status: "error", error: String(err) },
-          }));
-        }
-      })
-    );
+    for (const p of PRODUCTS) {
+      try {
+        const res = await fetch("/api/mockup/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ artworkBase64: artBase64, artworkMimeType: artMime, productType: p.key }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        setMockups((prev) => ({
+          ...prev,
+          [p.key]: { ...prev[p.key], status: "done", base64: data.imageBase64, mime: data.mimeType ?? "image/png" },
+        }));
+      } catch (err) {
+        setMockups((prev) => ({
+          ...prev,
+          [p.key]: { ...prev[p.key], status: "error", error: String(err) },
+        }));
+      }
+      await new Promise((r) => setTimeout(r, 3000));
+    }
   }
 
   async function handleSaveAll() {
