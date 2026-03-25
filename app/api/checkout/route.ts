@@ -173,8 +173,8 @@ export async function POST(req: NextRequest) {
         )
         .join("");
 
-      const qrImageTag = pixQrCodeBase64
-        ? `<img src="data:image/png;base64,${pixQrCodeBase64}" alt="QR Code PIX" width="180" height="180" style="display:block;border-radius:6px;margin-bottom:16px" />`
+      const qrImageTag = pixQrCode
+        ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pixQrCode)}" alt="QR Code PIX" width="180" height="180" style="display:block;border-radius:6px;margin-bottom:16px" />`
         : "";
 
       const pixSection = pixQrCode
