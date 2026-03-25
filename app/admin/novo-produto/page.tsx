@@ -30,17 +30,26 @@ type MockupState = {
   error?: string;
 };
 
-function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
+function compressImage(file: File, maxPx = 1200, quality = 0.85): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      const [meta, base64] = dataUrl.split(",");
-      const mimeType = meta.match(/:(.*?);/)?.[1] ?? "image/png";
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      const mimeType = file.type === "image/png" ? "image/png" : "image/jpeg";
+      const dataUrl = canvas.toDataURL(mimeType, quality);
+      const base64 = dataUrl.split(",")[1];
       resolve({ base64, mimeType });
     };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    img.onerror = reject;
+    img.src = url;
   });
 }
 
@@ -97,7 +106,7 @@ export default function NovoProductPage() {
     setMockups((prev) =>
       Object.fromEntries(Object.entries(prev).map(([k, v]) => [k, { ...v, status: "idle", base64: "", error: "" }]))
     );
-    const { base64, mimeType } = await fileToBase64(file);
+    const { base64, mimeType } = await compressImage(file);
     setArtBase64(base64);
     setArtMime(mimeType);
   }
