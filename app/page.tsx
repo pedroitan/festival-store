@@ -2,6 +2,8 @@ import ProductGrid from "@/components/vitrine/ProductGrid";
 import type { ProductCardData } from "@/components/vitrine/ProductCard";
 import { supabase } from "@/lib/supabase";
 
+export const revalidate = 60;
+
 async function getProducts(): Promise<ProductCardData[]> {
   const { data, error } = await supabase
     .from("products")

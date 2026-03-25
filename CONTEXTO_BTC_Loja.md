@@ -421,24 +421,39 @@ Cada transição de status deve:
 
 ---
 
-## 11. Sprint Atual — Foco de Desenvolvimento
+## 11. Status de Desenvolvimento — Março 2026
 
-**Sprint 1: Frontend da Vitrine**
+### ✅ Concluído
 
-Entregar neste sprint:
-1. `app/page.tsx` — Home da loja: hero + grid de produtos em destaque
-2. `app/produtos/[slug]/page.tsx` — Página de produto com preview e seleção de variação
-3. `components/vitrine/ProductCard.tsx` — Card reutilizável para grid
-4. `components/produto/VariantSelector.tsx` — Seleção de tamanho/cor
-5. `components/produto/ProductPreview.tsx` — Preview da arte no produto
-6. Dados carregados do Supabase (produtos com status `active`)
-7. Identidade visual completa aplicada (paleta, fontes, grain)
+**Sprint 1 — Vitrine:**
+- Home com `ProductGrid` + `ProductCard`
+- Páginas: `/produtos`, `/produtos/[slug]`, `/artistas/[slug]`, `/carrinho`, `/checkout`, `/pedido/[id]`
+- Navbar: bg-navbar.png, font Neocrash magenta, personagem cropado como flex item
+- Zustand cart com hydration-safe badge
+- TenantProvider + middleware multi-tenancy
 
-**Não implementar neste sprint:**
-- Carrinho funcional (pode ser stub)
-- Checkout
-- Pagamentos
-- Dashboards
+**Sprint 2 — Checkout + Pagamentos (parcial):**
+- Checkout completo (dados pessoais, endereço, CEP)
+- Mercado Pago PIX: QR Code dinâmico gerado e salvo no banco ✅
+- Email de confirmação via Resend com QR Code como imagem e código copia-e-cola ✅
+- Webhook `/api/webhooks/mercadopago` implementado
+- Página `/pedido/[id]` com PixPanel (QR + copiar código)
+- `notification_url` condicional (só HTTPS) para evitar rejeição do MP em localhost
+
+**Admin:**
+- `/admin/novo-produto` — upload de arte + geração de mockups via **Gemini AI** (sequencial, 3s de delay entre requests)
+- `/admin` — dashboard com listagem, toggle ativo/inativo e delete de produtos
+
+### 🔴 Pendente
+
+| Feature | Sprint | Prioridade |
+|---|---|---|
+| Correios API real (PAC/SEDEX por CEP + peso) | Sprint 2 | Alta |
+| Desconto 5% PIX no checkout | Sprint 2 | Média |
+| Supabase Auth (magic link) + proteção de rotas admin | Sprint 3 | Alta |
+| Dashboard do produtor (Ponto de Cuidado) | Sprint 3 | Alta |
+| Dashboard do artista (vendas, royalties, tier) | Sprint 4 | Alta |
+| Dashboard admin completo (financeiro, royalties) | Sprint 4 | Média |
 
 ---
 
@@ -450,22 +465,24 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
-# Mercado Pago
-MP_ACCESS_TOKEN=
-MP_WEBHOOK_SECRET=
-NEXT_PUBLIC_MP_PUBLIC_KEY=
+# Mercado Pago (nome exato usado no código)
+MERCADOPAGO_ACCESS_TOKEN=
+MP_WEBHOOK_SECRET=          # para validação do webhook
 
-# Correios
+# Correios (pendente implementação)
 CORREIOS_USERNAME=
 CORREIOS_PASSWORD=
-CORREIOS_CEP_ORIGEM=        # CEP do Ponto de Cuidado
+CORREIOS_CEP_ORIGEM=        # CEP do Ponto de Cuidado (Salvador-BA)
 
 # Resend
 RESEND_API_KEY=
-RESEND_FROM_EMAIL=loja@btcgraffiti.com.br
+RESEND_FROM=BTC Festival <noreply@btcfestival.com.br>
+
+# Gemini AI (geração de mockups)
+GEMINI_API_KEY=
 
 # App
-NEXT_PUBLIC_APP_URL=https://loja.btcgraffiti.com.br
+NEXT_PUBLIC_SITE_URL=https://festival-store.vercel.app
 ```
 
 ---
@@ -481,73 +498,59 @@ NEXT_PUBLIC_APP_URL=https://loja.btcgraffiti.com.br
 
 ---
 
-## 14. Estrutura de Pastas do Repo
+## 14. Estrutura de Pastas do Repo (estado atual)
 
 ```
 festival-store/
 ├── app/
-│   ├── layout.tsx                        ← layout raiz (injeta tema do tenant)
+│   ├── layout.tsx                        ← layout raiz + TenantProvider
 │   ├── middleware.ts                      ← resolve tenant via hostname
-│   ├── page.tsx                           ← vitrine / home da loja
+│   ├── page.tsx                           ← vitrine / home da loja ✅
 │   ├── artistas/
-│   │   └── [slug]/page.tsx               ← perfil + produtos do artista
+│   │   └── [slug]/page.tsx               ← perfil + produtos do artista ✅
 │   ├── produtos/
-│   │   └── [slug]/page.tsx               ← página do produto
-│   ├── carrinho/page.tsx
-│   ├── checkout/
-│   │   ├── page.tsx                       ← form de dados + frete + pagamento
-│   │   ├── pix/page.tsx                   ← QR Code PIX + polling de confirmação
-│   │   └── sucesso/page.tsx              ← confirmação pós-pagamento
-│   ├── pedido/[id]/page.tsx              ← acompanhamento do pedido
-│   └── dashboard/
+│   │   └── [slug]/page.tsx               ← página do produto ✅
+│   ├── carrinho/page.tsx                 ✅
+│   ├── checkout/page.tsx                 ← form dados + endereço + PIX ✅
+│   ├── pedido/
+│   │   └── [id]/
+│   │       ├── page.tsx                  ← confirmação do pedido ✅
+│   │       └── PixPanel.tsx              ← QR Code + copia-e-cola ✅
+│   ├── admin/
+│   │   ├── page.tsx                      ← dashboard: listar/deletar/toggle produtos ✅
+│   │   └── novo-produto/page.tsx         ← upload arte + geração mockup Gemini AI ✅
+│   └── api/
+│       ├── checkout/route.ts             ← cria pedido + PIX MP + email Resend ✅
+│       ├── webhooks/
+│       │   └── mercadopago/route.ts      ← webhook confirmação de pagamento ✅
+│       ├── mockup/
+│       │   ├── generate/route.ts         ← gera mockup via Gemini AI ✅
+│       │   └── save/route.ts             ← salva mockup no Supabase Storage ✅
 │       ├── admin/
-│       │   ├── page.tsx                  ← resumo financeiro
-│       │   ├── pedidos/page.tsx
-│       │   ├── artistas/page.tsx
-│       │   ├── catalogo/page.tsx
-│       │   └── royalties/page.tsx
-│       ├── produtor/page.tsx             ← fila de produção (Ponto de Cuidado)
-│       └── artista/page.tsx             ← painel do artista
-├── api/
-│   ├── payments/create/route.ts          ← cria preferência MP (PIX ou cartão)
-│   ├── webhooks/mercadopago/route.ts     ← webhook de confirmação de pagamento
-│   ├── shipping/calculate/route.ts       ← frete Correios por CEP
-│   └── royalties/calculate/route.ts     ← cálculo de tier + bônus
+│       │   └── products/
+│       │       ├── route.ts              ← GET all products (bypass RLS) ✅
+│       │       └── [id]/route.ts         ← DELETE + PATCH active ✅
+│       ├── products/create/route.ts      ← cria produto no banco ✅
+│       └── debug/mp/route.ts             ← diagnóstico Mercado Pago (dev only)
 ├── components/
-│   ├── vitrine/
-│   │   ├── ProductCard.tsx
-│   │   ├── ProductGrid.tsx
-│   │   └── ArtistCard.tsx
-│   ├── produto/
-│   │   ├── ProductPreview.tsx            ← preview arte no produto
-│   │   ├── VariantSelector.tsx
-│   │   └── AddToCart.tsx
-│   ├── checkout/
-│   │   ├── ShippingForm.tsx
-│   │   ├── FreightCalculator.tsx
-│   │   └── PaymentSelector.tsx
-│   └── dashboard/
-│       ├── OrderCard.tsx
-│       ├── RoyaltiesPanel.tsx
-│       └── ArtUploader.tsx
+│   ├── Navbar.tsx                        ← navbar com personagem BTC ✅
+│   ├── ProductCard.tsx
+│   └── ProductGrid.tsx
 ├── lib/
-│   ├── supabase/
-│   │   ├── client.ts                     ← Supabase browser client
-│   │   ├── server.ts                     ← Supabase server client (RSC)
-│   │   └── types.ts                      ← tipos gerados pelo Supabase CLI
-│   ├── mercadopago.ts
-│   ├── correios.ts
-│   ├── royalties.ts                      ← cálculo de tier e bônus
-│   └── tenant.ts                         ← resolve tenant da request
+│   ├── supabase.ts                       ← client + supabaseAdmin (lazy singleton)
+│   └── mercadopago.ts                    ← createPixPayment
 ├── store/
-│   └── cart.ts                           ← Zustand store do carrinho
-├── hooks/
-│   ├── useCart.ts
-│   └── useOrders.ts
+│   └── cart.ts                           ← Zustand store do carrinho ✅
+├── supabase/
+│   └── migrations/
+│       ├── 001_initial_schema.sql        ← schema + seed btcfestival ✅
+│       └── 002_storage_produtos.sql      ← bucket produtos no Storage ✅
 └── public/
     └── tenants/
         └── btcfestival/
-            └── logo.png                  ← assets por tenant
+            ├── logo.png
+            ├── bg-navbar.png
+            └── personagem1.png
 ```
 
 ---
@@ -633,4 +636,4 @@ Todos os componentes usam CSS variables — **nunca cores hardcoded**:
 
 ---
 
-*Última atualização: Março 2026 · BTC Loja — Print-on-Demand*
+*Última atualização: 25 Mar 2026 · BTC Loja — Print-on-Demand · deploy: https://festival-store.vercel.app*

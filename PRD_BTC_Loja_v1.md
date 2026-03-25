@@ -3,10 +3,10 @@
 
 | Campo | Valor |
 |---|---|
-| Versão | v1.0 — Documento Fundacional |
-| Data | Março 2026 |
-| Autor | Equipe BTC / Claude (Anthropic) |
-| Status | Aprovado para desenvolvimento |
+| Versão | v1.1 — Atualizado com estado real Mar/2026 |
+| Data | 25 Mar 2026 |
+| Autor | Equipe BTC / Cascade (Windsurf) |
+| Status | Em desenvolvimento ativo |
 | Repositório | Separado do site BTC — projeto whitelabel independente |
 | Parceiro de produção | Ponto de Cuidado — Arte que Transforma · Salvador-BA |
 
@@ -418,11 +418,12 @@ POST /api/webhooks/mercadopago
 | Estilo | Tailwind CSS + tokens BTC | Velocidade, consistência visual, design tokens por tenant |
 | Banco de dados | Supabase (PostgreSQL) | RLS nativo, Auth, Storage — isolamento por perfil garantido |
 | Autenticação | Supabase Auth | Três perfis: admin, producer, artista — magic link ou e-mail/senha |
-| Storage de artes | Supabase Storage | Arquivos de impressão protegidos por RLS (producer e admin only) |
+| Storage de artes | Supabase Storage | bucket `produtos` — mockups e artes originais |
 | Pagamentos | Mercado Pago API — Checkout Transparente | PIX + cartão unificados, webhook robusto, líder no Brasil |
+| Geração de mockups | Google Gemini AI (`gemini-3.1-flash-image-preview`) | Arte aplicada digitalmente no produto via IA generativa |
 | Frete | Correios API (webservice oficial) | Cálculo em tempo real por CEP, PAC e SEDEX, rastreio integrado |
-| E-mail transacional | Resend | Templates por status, rastreio automático, deliverability alta |
-| Deploy | Vercel | CI/CD automático, edge network, preview environments por PR |
+| E-mail transacional | Resend | QR Code PIX via URL pública, dominio `btcfestival.com.br` verificado |
+| Deploy | Vercel | CI/CD automático a cada push no `master` |
 | Analytics | Plausible.io | LGPD-friendly, sem cookies, leve |
 
 ### 11.1 Estrutura de pastas
@@ -588,13 +589,15 @@ CREATE TABLE royalty_cycles (
 -- Tabela de tenants (white-label)
 CREATE TABLE tenants (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug                TEXT UNIQUE NOT NULL,
+  slug                TEXT UNIQUE NOT NULL,  -- 'btcfestival'
   name                TEXT NOT NULL,
-  domain              TEXT UNIQUE,
-  theme_config        JSONB NOT NULL DEFAULT '{}',
+  domain              TEXT UNIQUE,           -- 'loja.btcgraffiti.com.br'
+  logo_url            TEXT,
+  primary_color       TEXT DEFAULT '#0B12CC',
   royalty_pct_default NUMERIC(5,2) DEFAULT 25.00,
   active              BOOLEAN DEFAULT true,
   created_at          TIMESTAMPTZ DEFAULT now()
+  -- SEM theme_config: paleta e tipografia são fixas no design system
 );
 
 -- Policies RLS principais
@@ -607,43 +610,50 @@ CREATE TABLE tenants (
 
 ## 13. Critérios de Aceite por Sprint
 
-### Sprint 1 — Vitrine e Página de Produto ← FOCO ATUAL
+### Sprint 1 — Vitrine e Página de Produto ✅ CONCLUÍDO
 
 | # | Critério | Prioridade |
 |---|---|---|
-| 1 | Vitrine lista produtos com foto, nome do artista, categoria e preço | CRÍTICO |
-| 2 | Filtros por artista, categoria e estilo funcionam sem reload | CRÍTICO |
-| 3 | Página do produto exibe galeria, bio do artista, variações disponíveis | CRÍTICO |
-| 4 | Seleção de variação atualiza o preview da arte no produto em tempo real | CRÍTICO |
-| 5 | Botão "Adicionar ao carrinho" funciona; carrinho persiste na sessão | CRÍTICO |
-| 6 | Layout mobile-first — funcional em 320px sem scroll horizontal | CRÍTICO |
-| 7 | Design system aplicado: mockups com fundo limpo, paleta neutra, Inter + JetBrains Mono, logo do tenant no header | ALTO |
-| 8 | LCP < 2.5s com imagens otimizadas (next/image) | ALTO |
-| 9 | Dados de produto carregados do Supabase (não hardcoded) | ALTO |
-| 10 | SEO: meta tags, OG tags e schema.org (Product) por página de produto | MÉDIO |
+| 1 | Vitrine lista produtos com foto, nome do artista, categoria e preço | ✅ |
+| 2 | Página do produto exibe galeria, bio do artista | ✅ |
+| 3 | Botão "Adicionar ao carrinho" funciona; carrinho persiste na sessão | ✅ |
+| 4 | Navbar com identidade BTC (Neocrash, bg-navbar, personagem) | ✅ |
+| 5 | Dados de produto carregados do Supabase | ✅ |
+| 6 | Layout mobile-first funcional | ✅ |
 
-### Sprint 2 — Checkout + Pagamentos
+### Sprint 2 — Checkout + Pagamentos ⚠️ PARCIALMENTE CONCLUÍDO
 
 | # | Critério | Prioridade |
 |---|---|---|
-| 1 | Checkout coleta nome, e-mail, CPF e endereço com busca por CEP | CRÍTICO |
-| 2 | Cálculo de frete via Correios API retorna PAC e SEDEX com prazo e preço | CRÍTICO |
-| 3 | Pagamento via PIX: QR Code exibido; desconto de 5% aplicado | CRÍTICO |
-| 4 | Pagamento via cartão: formulário inline (sem redirecionamento) | CRÍTICO |
-| 5 | Webhook MP atualiza status do pedido automaticamente | CRÍTICO |
-| 6 | E-mail de confirmação enviado ao cliente após pagamento | ALTO |
-| 7 | Página de confirmação exibe resumo do pedido com prazo estimado | ALTO |
+| 1 | Checkout coleta nome, e-mail, CPF e endereço com busca por CEP | ✅ |
+| 2 | Cálculo de frete via Correios API retorna PAC e SEDEX com prazo e preço | 🔴 pendente |
+| 3 | Pagamento via PIX: QR Code dinâmico gerado pelo MP | ✅ |
+| 4 | Desconto de 5% aplicado no total PIX | 🔴 pendente |
+| 5 | Pagamento via cartão: formulário inline | 🔴 pendente |
+| 6 | Webhook MP atualiza status do pedido | ✅ (implementado) |
+| 7 | E-mail de confirmação com QR Code enviado ao cliente | ✅ |
+| 8 | Página `/pedido/[id]` com PixPanel (QR + copia-e-cola) | ✅ |
 
-### Sprint 3 — Dashboard do Ponto de Cuidado
+### Sprint 2.5 — Admin (extra-sprint) ✅ CONCLUÍDO
+
+| # | Critério | Status |
+|---|---|---|
+| 1 | `/admin/novo-produto`: upload de arte + geração de mockups via Gemini AI | ✅ |
+| 2 | `/admin`: dashboard com listagem de todos os produtos (ativos + inativos) | ✅ |
+| 3 | Toggle ativo/inativo por produto | ✅ |
+| 4 | Delete de produto com confirmação | ✅ |
+
+### Sprint 3 — Auth + Dashboard do Ponto de Cuidado
 
 | # | Critério | Prioridade |
 |---|---|---|
-| 1 | Login com perfil `producer` acessa apenas o dashboard de produção | CRÍTICO |
-| 2 | Fila exibe pedidos com status `aguardando_producao` | CRÍTICO |
-| 3 | Card de pedido mostra produto, variação, arte (download), specs e endereço | CRÍTICO |
-| 4 | Botão "Iniciar produção" muda status e notifica cliente | CRÍTICO |
-| 5 | Botão "Marcar como despachado" exige código de rastreio antes de salvar | CRÍTICO |
-| 6 | E-mail automático ao cliente com código de rastreio após despacho | ALTO |
+| 1 | Supabase Auth (magic link) para perfis admin, producer, artista | CRÍTICO |
+| 2 | Proteção das rotas `/admin`, `/dashboard` por perfil | CRÍTICO |
+| 3 | Login com perfil `producer` acessa apenas o dashboard de produção | CRÍTICO |
+| 4 | Fila exibe pedidos com status `aguardando_producao` | CRÍTICO |
+| 5 | Card de pedido mostra produto, variação, arte (download), specs e endereço | CRÍTICO |
+| 6 | Botões "Iniciar produção" e "Marcar como despachado" (com rastreio obrigatório) | CRÍTICO |
+| 7 | E-mail automático ao cliente com código de rastreio após despacho | ALTO |
 
 ### Sprint 4 — Dashboards Admin e Artista
 
@@ -731,4 +741,4 @@ CREATE TABLE tenants (
 
 ---
 
-*Última atualização: Março 2026 · v1.0 · BTC Loja — Print-on-Demand · Projeto independente do site BTC*
+*Última atualização: 25 Mar 2026 · v1.1 · BTC Loja — Print-on-Demand · deploy: https://festival-store.vercel.app*

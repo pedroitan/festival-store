@@ -39,7 +39,7 @@ export default function AdminPage() {
 
   async function loadProducts() {
     setLoading(true);
-    const res = await fetch("/api/admin/products");
+    const res = await fetch("/api/admin/products", { cache: "no-store" });
     const data = await res.json();
     if (data.error) { setError(data.error); setLoading(false); return; }
     setProducts(data.products);
@@ -51,21 +51,31 @@ export default function AdminPage() {
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Deletar "${name}"? Esta ação não pode ser desfeita.`)) return;
     setDeletingId(id);
-    await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert(`Erro ao deletar: ${data.error ?? res.statusText}`);
+    } else {
+      await loadProducts();
+    }
     setDeletingId(null);
   }
 
   async function handleToggleActive(id: string, current: boolean) {
     setTogglingId(id);
-    await fetch(`/api/admin/products/${id}`, {
+    const res = await fetch(`/api/admin/products/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ active: !current }),
     });
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, active: !current } : p))
-    );
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert(`Erro ao atualizar: ${data.error ?? res.statusText}`);
+    } else {
+      setProducts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, active: !current } : p))
+      );
+    }
     setTogglingId(null);
   }
 
@@ -168,9 +178,8 @@ export default function AdminPage() {
                   </div>
 
                   {/* Status badge */}
-                  <div className={`text-xs font-medium px-2 py-0.5 rounded-full w-16 text-center ${
-                    p.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                  }`}>
+                  <div className={`text-xs font-medium px-2 py-0.5 rounded-full w-16 text-center ${p.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                    }`}>
                     {p.active ? "ativo" : "inativo"}
                   </div>
 

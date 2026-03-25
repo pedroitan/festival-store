@@ -4,7 +4,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Client-side (anon key — respects RLS)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: { fetch: (url, options = {}) => fetch(url, { ...options, cache: "no-store" }) },
+});
 
 // Server-side lazy singleton (service_role — bypasses RLS, use only in API routes)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,7 +19,9 @@ export function getSupabaseAdmin(): ReturnType<typeof createClient<any>> {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) throw new Error("SUPABASE_SERVICE_ROLE_KEY não configurado");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _supabaseAdmin = createClient<any>(supabaseUrl, serviceKey);
+    _supabaseAdmin = createClient<any>(supabaseUrl, serviceKey, {
+      global: { fetch: (url, options = {}) => fetch(url, { ...options, cache: "no-store" }) },
+    });
   }
   return _supabaseAdmin;
 }
