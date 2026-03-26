@@ -27,7 +27,7 @@ export default async function PedidoPage({ params }: { params: { id: string } })
 
   return (
     <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
-      <StatusPoller orderId={order.id} isPending={isPending} />
+      <StatusPoller isPending={isPending} />
 
       {/* Header */}
       <div className="mb-8">

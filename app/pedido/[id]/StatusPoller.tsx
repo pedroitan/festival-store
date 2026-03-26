@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default function StatusPoller({ orderId, isPending }: { orderId: string; isPending: boolean }) {
+export default function StatusPoller({ isPending }: { isPending: boolean }) {
   const router = useRouter();
 
   useEffect(() => {
