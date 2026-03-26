@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { Package, Truck, CheckCircle, Clock, RefreshCw, ChevronDown, ChevronUp, Download } from "lucide-react";
 
 type OrderItem = {
@@ -97,8 +98,11 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
       <div className="flex items-start justify-between gap-3 p-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono font-bold text-text text-sm">#{shortId}</span>
+            <Link href={`/pedido/${order.id}`} target="_blank" className="font-mono font-bold text-text text-sm hover:text-primary transition-colors">
+              #{shortId} ↗
+            </Link>
             <StatusBadge status={order.status} />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/15 border border-green-500/40 text-green-400">✓ Pago</span>
             <span className="text-xs text-text-muted">{fmtDate(order.created_at)}</span>
           </div>
           <p className="text-sm text-text mt-1 font-medium">{order.customer_name}</p>
@@ -304,8 +308,8 @@ export default function ProdutorDashboard() {
               key={key}
               onClick={() => setFilter(key)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${filter === key
-                  ? "bg-primary text-text-inverse border-primary"
-                  : "bg-surface text-text-muted border-border hover:border-primary/50"
+                ? "bg-primary text-text-inverse border-primary"
+                : "bg-surface text-text-muted border-border hover:border-primary/50"
                 }`}
             >
               {label}
