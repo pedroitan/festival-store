@@ -29,13 +29,26 @@ export default async function PedidoPage({ params }: { params: { id: string } })
     <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
       <StatusPoller isPending={isPending} />
 
+      {/* Banner PAGO */}
+      {isPaid && (
+        <div className="bg-green-500/10 border-2 border-green-500/60 rounded-xl p-6 mb-8 flex items-center gap-5">
+          <div className="shrink-0 w-14 h-14 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+          <div>
+            <p className="text-green-400 font-display font-bold text-xl leading-tight">Pagamento confirmado</p>
+            <p className="text-green-300/80 text-sm mt-0.5">PIX recebido pelo Mercado Pago · Pedido em produção</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <p className="text-xs text-text-muted uppercase tracking-widest font-body mb-1">
           Pedido #{shortId}
         </p>
         <h1 className="text-2xl font-display font-bold text-text">
-          {isPaid ? "Pagamento confirmado! ✓" : "Aguardando pagamento"}
+          {isPaid ? "Pedido confirmado" : "Aguardando pagamento"}
         </h1>
         <p className="text-sm text-text-muted mt-1">
           Confirmação enviada para <strong className="text-text">{order.customer_email}</strong>
@@ -58,13 +71,6 @@ export default async function PedidoPage({ params }: { params: { id: string } })
             <strong className="text-yellow-200">@btcfestival</strong> informando o pedido{" "}
             <strong className="text-yellow-200">#{shortId}</strong> para receber o código PIX.
           </p>
-        </div>
-      )}
-
-      {isPaid && (
-        <div className="bg-green-900/20 border border-green-500/30 rounded-md p-4 mb-6">
-          <p className="text-green-400 font-body font-semibold text-sm">PIX recebido ✓</p>
-          <p className="text-green-300/70 text-xs mt-0.5">Seu pedido foi confirmado e está em produção. Em breve você receberá atualizações por e-mail.</p>
         </div>
       )}
 
