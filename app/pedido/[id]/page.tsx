@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import PixPanel from "./PixPanel";
+import StatusPoller from "./StatusPoller";
 
 async function getOrder(id: string) {
   const { data } = await supabaseAdmin()
@@ -22,10 +23,11 @@ export default async function PedidoPage({ params }: { params: { id: string } })
 
   const shortId = order.id.slice(0, 8).toUpperCase();
   const isPending = order.status === "pending";
-  const isPaid = order.status === "paid";
+  const isPaid = order.status === "aguardando_producao" || order.status === "paid";
 
   return (
     <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+      <StatusPoller orderId={order.id} isPending={isPending} />
 
       {/* Header */}
       <div className="mb-8">
@@ -33,7 +35,7 @@ export default async function PedidoPage({ params }: { params: { id: string } })
           Pedido #{shortId}
         </p>
         <h1 className="text-2xl font-display font-bold text-text">
-          {isPaid ? "Pagamento confirmado!" : "Aguardando pagamento"}
+          {isPaid ? "Pagamento confirmado! ✓" : "Aguardando pagamento"}
         </h1>
         <p className="text-sm text-text-muted mt-1">
           Confirmação enviada para <strong className="text-text">{order.customer_email}</strong>
@@ -62,7 +64,7 @@ export default async function PedidoPage({ params }: { params: { id: string } })
       {isPaid && (
         <div className="bg-green-900/20 border border-green-500/30 rounded-md p-4 mb-6">
           <p className="text-green-400 font-body font-semibold text-sm">PIX recebido ✓</p>
-          <p className="text-green-300/70 text-xs mt-0.5">Seu pedido foi confirmado e está em produção.</p>
+          <p className="text-green-300/70 text-xs mt-0.5">Seu pedido foi confirmado e está em produção. Em breve você receberá atualizações por e-mail.</p>
         </div>
       )}
 

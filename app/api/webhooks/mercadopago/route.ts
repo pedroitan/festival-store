@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
@@ -49,6 +50,8 @@ export async function POST(req: NextRequest) {
       .eq("id", orderId);
 
     console.log(`Webhook MP: order ${orderId} → ${newStatus} (MP: ${mpStatus})`);
+
+    revalidatePath(`/pedido/${orderId}`);
 
     return NextResponse.json({ received: true });
   } catch (err) {
