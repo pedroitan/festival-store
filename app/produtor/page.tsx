@@ -40,9 +40,9 @@ type Order = {
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   aguardando_producao: { label: "Aguardando produção", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30" },
-  em_producao:        { label: "Em produção",         color: "text-blue-400 bg-blue-400/10 border-blue-400/30" },
-  despachado:         { label: "Despachado",           color: "text-green-400 bg-green-400/10 border-green-400/30" },
-  entregue:           { label: "Entregue",             color: "text-green-600 bg-green-600/10 border-green-600/30" },
+  em_producao: { label: "Em produção", color: "text-blue-400 bg-blue-400/10 border-blue-400/30" },
+  despachado: { label: "Despachado", color: "text-green-400 bg-green-400/10 border-green-400/30" },
+  entregue: { label: "Entregue", color: "text-green-600 bg-green-600/10 border-green-600/30" },
 };
 
 function fmt(cents: number) {
@@ -227,7 +227,7 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: () => void }) 
 export default function ProdutorDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"todos" | "aguardando_producao" | "em_producao">("todos");
+  const [filter, setFilter] = useState<"todos" | "aguardando_producao" | "em_producao" | "despachado" | "entregue">("todos");
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   const fetchOrders = useCallback(async () => {
@@ -251,7 +251,9 @@ export default function ProdutorDashboard() {
 
   const filtered = filter === "todos" ? orders : orders.filter((o) => o.status === filter);
   const countAguardando = orders.filter((o) => o.status === "aguardando_producao").length;
-  const countEmProducao  = orders.filter((o) => o.status === "em_producao").length;
+  const countEmProducao = orders.filter((o) => o.status === "em_producao").length;
+  const countDespachado = orders.filter((o) => o.status === "despachado").length;
+  const countEntregue = orders.filter((o) => o.status === "entregue").length;
 
   return (
     <main className="min-h-screen bg-background">
@@ -270,32 +272,41 @@ export default function ProdutorDashboard() {
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-surface border border-yellow-400/30 rounded-lg p-3">
             <p className="text-2xl font-mono font-bold text-yellow-400">{countAguardando}</p>
-            <p className="text-xs text-text-muted mt-1">Aguardando produção</p>
+            <p className="text-xs text-text-muted mt-1">Aguardando</p>
           </div>
           <div className="bg-surface border border-blue-400/30 rounded-lg p-3">
             <p className="text-2xl font-mono font-bold text-blue-400">{countEmProducao}</p>
             <p className="text-xs text-text-muted mt-1">Em produção</p>
           </div>
+          <div className="bg-surface border border-green-400/30 rounded-lg p-3">
+            <p className="text-2xl font-mono font-bold text-green-400">{countDespachado}</p>
+            <p className="text-xs text-text-muted mt-1">Despachados</p>
+          </div>
+          <div className="bg-surface border border-border rounded-lg p-3">
+            <p className="text-2xl font-mono font-bold text-text-muted">{countEntregue}</p>
+            <p className="text-xs text-text-muted mt-1">Entregues</p>
+          </div>
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {([
-            { key: "todos",                label: "Todos" },
-            { key: "aguardando_producao",  label: "Aguardando" },
-            { key: "em_producao",          label: "Em produção" },
+            { key: "todos", label: "Todos" },
+            { key: "aguardando_producao", label: "Aguardando" },
+            { key: "em_producao", label: "Em produção" },
+            { key: "despachado", label: "Despachados" },
+            { key: "entregue", label: "Entregues" },
           ] as const).map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setFilter(key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                filter === key
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${filter === key
                   ? "bg-primary text-text-inverse border-primary"
                   : "bg-surface text-text-muted border-border hover:border-primary/50"
-              }`}
+                }`}
             >
               {label}
             </button>

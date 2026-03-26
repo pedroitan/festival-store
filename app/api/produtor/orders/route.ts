@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-const PRODUCTION_STATUSES = ["aguardando_producao", "em_producao"];
+const PRODUCTION_STATUSES = ["aguardando_producao", "em_producao", "despachado", "entregue"];
 
 export async function GET() {
   try {
