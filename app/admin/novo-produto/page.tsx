@@ -319,13 +319,14 @@ export default function NovoProductPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-text-muted">R$</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       value={m.price}
-                      step="0.01"
-                      min="0.01"
-                      onChange={(e) =>
-                        setMockups((prev) => ({ ...prev, [p.key]: { ...prev[p.key], price: Number(e.target.value) } }))
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value.replace(",", ".");
+                        const num = parseFloat(val);
+                        setMockups((prev) => ({ ...prev, [p.key]: { ...prev[p.key], price: isNaN(num) ? 0 : num } }));
+                      }}
                       className="w-full bg-background border border-border rounded px-2 py-1 text-sm font-mono text-text focus:outline-none focus:border-primary"
                     />
                   </div>
