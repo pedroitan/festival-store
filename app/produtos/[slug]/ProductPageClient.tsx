@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 import { useCartStore } from "@/store/cart";
 import { ShoppingBag } from "lucide-react";
@@ -82,13 +81,7 @@ export default function ProductPageClient({ product }: { product: ProductData })
             </h1>
             {product.artist && (
               <p className="text-sm text-text-muted mt-1">
-                por{" "}
-                <Link
-                  href={`/artistas/${product.artist.slug}`}
-                  className="hover:text-text transition-colors underline underline-offset-2"
-                >
-                  {product.artist.name}
-                </Link>
+                por {product.artist.name}
               </p>
             )}
           </div>

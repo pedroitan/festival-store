@@ -4,13 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart";
 import Link from "next/link";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, Package, Truck } from "lucide-react";
 
 type AddressData = {
   logradouro: string;
   bairro: string;
   localidade: string;
   uf: string;
+};
+
+type ShippingOption = {
+  code: string;
+  name: string;
+  price: number;
+  days: number;
 };
 
 function formatPrice(price: number) {
@@ -33,11 +40,15 @@ export default function CheckoutPage() {
   });
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [shippingError, setShippingError] = useState("");
+  const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const subtotal = total();
-  const shipping = subtotal >= 200 ? 0 : 2990;
+  const shipping = selectedShipping?.price ?? 0;
   const orderTotal = subtotal * 100 + shipping;
 
   function set(field: string, value: string) {
@@ -49,6 +60,9 @@ export default function CheckoutPage() {
     if (cep.length !== 8) return;
     setCepLoading(true);
     setCepError("");
+    setShippingOptions([]);
+    setSelectedShipping(null);
+    setShippingError("");
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data: AddressData & { erro?: boolean } = await res.json();
@@ -60,10 +74,34 @@ export default function CheckoutPage() {
         city: data.localidade,
         state: data.uf,
       }));
+      calculateShipping(cep);
     } catch {
       setCepError("Erro ao buscar CEP");
     } finally {
       setCepLoading(false);
+    }
+  }
+
+  async function calculateShipping(cep: string) {
+    setShippingLoading(true);
+    setShippingError("");
+    try {
+      const shippingItems = items.map((i) => ({
+        category: i.name.split(" — ")[0],
+        quantity: i.quantity,
+      }));
+      const res = await fetch("/api/shipping/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cep, items: shippingItems }),
+      });
+      const data = await res.json();
+      if (data.error) { setShippingError(data.error); return; }
+      setShippingOptions(data.services ?? []);
+    } catch {
+      setShippingError("Erro ao calcular frete");
+    } finally {
+      setShippingLoading(false);
     }
   }
 
@@ -143,7 +181,7 @@ export default function CheckoutPage() {
                     required
                     className="flex-1 bg-surface border border-border rounded-md px-3 py-2 text-sm text-text focus:outline-none focus:border-primary"
                   />
-                  {cepLoading && <Loader2 size={16} className="animate-spin self-center text-text-muted" />}
+                  {(cepLoading || shippingLoading) && <Loader2 size={16} className="animate-spin self-center text-text-muted" />}
                 </div>
                 {cepError && <p className="text-xs text-red-400">{cepError}</p>}
               </div>
@@ -154,6 +192,36 @@ export default function CheckoutPage() {
               <Field label="Estado" value={form.state} onChange={(v) => set("state", v)} required />
               <Field label="Complemento" value={form.complement} onChange={(v) => set("complement", v)} col2 />
             </div>
+
+            {/* Opções de frete */}
+            {shippingError && (
+              <p className="text-xs text-red-400 mt-2">{shippingError} — <button type="button" className="underline" onClick={() => calculateShipping(form.cep.replace(/\D/g, ""))}>Tentar novamente</button></p>
+            )}
+            {shippingOptions.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2">
+                <p className="text-xs font-body font-medium uppercase tracking-widest text-text-muted">Opção de entrega</p>
+                {shippingOptions.map((opt) => (
+                  <button
+                    key={opt.code}
+                    type="button"
+                    onClick={() => setSelectedShipping(opt)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-md border text-sm transition-colors ${selectedShipping?.code === opt.code
+                        ? "border-primary bg-primary/10 text-text"
+                        : "border-border bg-surface text-text-muted hover:border-primary/50"
+                      }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {opt.name === "SEDEX" ? <Truck size={15} /> : <Package size={15} />}
+                      <div className="text-left">
+                        <p className="font-semibold">{opt.name}</p>
+                        <p className="text-xs">{opt.days} dia{opt.days !== 1 ? "s" : ""} úteis</p>
+                      </div>
+                    </div>
+                    <span className="font-mono font-semibold">{formatPrice(opt.price / 100)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Pagamento */}
@@ -195,12 +263,11 @@ export default function CheckoutPage() {
                 <span className="font-mono">{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between text-text-muted">
-                <span>Frete</span>
-                <span className="font-mono">{shipping === 0 ? "Grátis" : formatPrice(shipping / 100)}</span>
+                <span>Frete {selectedShipping ? `(${selectedShipping.name})` : ""}</span>
+                <span className="font-mono">
+                  {selectedShipping ? formatPrice(selectedShipping.price / 100) : shippingLoading ? "calculando…" : "—"}
+                </span>
               </div>
-              {shipping === 0 && (
-                <p className="text-xs text-green-400">Frete grátis para compras acima de R$200</p>
-              )}
             </div>
 
             <div className="border-t border-border pt-3 flex justify-between font-display font-bold text-text">
@@ -210,7 +277,7 @@ export default function CheckoutPage() {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !selectedShipping}
               className="flex items-center justify-center gap-2 w-full py-3.5 bg-primary text-text-inverse font-display font-semibold rounded-md hover:bg-primary-hover transition-colors disabled:opacity-50"
             >
               {submitting ? (
