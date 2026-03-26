@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     // Mapear status do MP para status interno
     const statusMap: Record<string, string> = {
-      approved: "paid",
+      approved: "aguardando_producao",
       pending: "pending",
       in_process: "pending",
       rejected: "cancelled",

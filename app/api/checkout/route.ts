@@ -32,6 +32,7 @@ type CheckoutBody = {
   items: CheckoutItem[];
   subtotal: number;  // centavos
   shippingCost: number; // centavos
+  shippingService: string; // PAC | SEDEX
   total: number;    // centavos
 };
 
@@ -105,7 +106,8 @@ export async function POST(req: NextRequest) {
         customer_phone: body.customer.phone,
         customer_cpf: body.customer.cpf,
         shipping_address: body.address,
-        shipping_method: "PAC",
+        shipping_method: body.shippingService ?? "PAC",
+        shipping_service: body.shippingService ?? "PAC",
         shipping_cost: body.shippingCost,
         subtotal: body.subtotal,
         total: body.total,

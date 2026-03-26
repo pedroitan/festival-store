@@ -74,6 +74,10 @@ export type Product = {
 export type OrderStatus =
   | "pending"
   | "paid"
+  | "aguardando_producao"
+  | "em_producao"
+  | "despachado"
+  | "entregue"
   | "processing"
   | "shipped"
   | "delivered"

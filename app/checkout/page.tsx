@@ -93,7 +93,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/shipping/calculate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cep, items: shippingItems, uf: form.state }),
+        body: JSON.stringify({ cep, items: shippingItems, uf: uf ?? form.state }),
       });
       const data = await res.json();
       if (data.error) { setShippingError(data.error); return; }
@@ -120,6 +120,7 @@ export default function CheckoutPage() {
           items: items.map((i) => ({ productId: i.productId, name: i.name, price: i.price * 100, quantity: i.quantity, imageUrl: i.imageUrl, artistName: i.artistName })),
           subtotal: subtotal * 100,
           shippingCost: shipping,
+          shippingService: selectedShipping?.name ?? "PAC",
           total: orderTotal,
         }),
       });
