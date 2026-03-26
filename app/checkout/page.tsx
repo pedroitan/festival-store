@@ -74,7 +74,7 @@ export default function CheckoutPage() {
         city: data.localidade,
         state: data.uf,
       }));
-      calculateShipping(cep);
+      calculateShipping(cep, data.uf);
     } catch {
       setCepError("Erro ao buscar CEP");
     } finally {
@@ -82,7 +82,7 @@ export default function CheckoutPage() {
     }
   }
 
-  async function calculateShipping(cep: string) {
+  async function calculateShipping(cep: string, uf?: string) {
     setShippingLoading(true);
     setShippingError("");
     try {
@@ -93,7 +93,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/shipping/calculate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cep, items: shippingItems }),
+        body: JSON.stringify({ cep, items: shippingItems, uf: form.state }),
       });
       const data = await res.json();
       if (data.error) { setShippingError(data.error); return; }
@@ -206,8 +206,8 @@ export default function CheckoutPage() {
                     type="button"
                     onClick={() => setSelectedShipping(opt)}
                     className={`flex items-center justify-between px-4 py-3 rounded-md border text-sm transition-colors ${selectedShipping?.code === opt.code
-                        ? "border-primary bg-primary/10 text-text"
-                        : "border-border bg-surface text-text-muted hover:border-primary/50"
+                      ? "border-primary bg-primary/10 text-text"
+                      : "border-border bg-surface text-text-muted hover:border-primary/50"
                       }`}
                   >
                     <div className="flex items-center gap-3">

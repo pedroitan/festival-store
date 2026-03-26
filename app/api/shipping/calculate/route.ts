@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const SERVICES = [
-  { code: "04510", name: "PAC" },
-  { code: "04014", name: "SEDEX" },
-];
+const MELHORENVIO_URL = "https://melhorenvio.com.br/api/v2/me/shipment/calculate";
 
 const PRODUCT_WEIGHTS: Record<string, number> = {
   Camiseta: 0.3,
@@ -14,9 +11,99 @@ const PRODUCT_WEIGHTS: Record<string, number> = {
   "Pôster Fine Art": 0.15,
 };
 
+// Tabela de frete por UF (origem: Salvador/BA) — fallback quando Correios API falha
+// valores em centavos
+const SHIPPING_TABLE: Record<string, { pac: number; pacDays: number; sedex: number; sedexDays: number }> = {
+  BA: { pac: 2290, pacDays: 5, sedex: 3890, sedexDays: 2 },
+  SE: { pac: 2590, pacDays: 6, sedex: 4290, sedexDays: 2 },
+  AL: { pac: 2590, pacDays: 6, sedex: 4290, sedexDays: 2 },
+  PE: { pac: 2790, pacDays: 7, sedex: 4590, sedexDays: 2 },
+  PB: { pac: 2790, pacDays: 7, sedex: 4590, sedexDays: 3 },
+  RN: { pac: 2990, pacDays: 8, sedex: 4890, sedexDays: 3 },
+  CE: { pac: 2990, pacDays: 8, sedex: 4890, sedexDays: 3 },
+  PI: { pac: 3190, pacDays: 9, sedex: 5090, sedexDays: 3 },
+  MA: { pac: 3190, pacDays: 9, sedex: 5090, sedexDays: 3 },
+  PA: { pac: 3490, pacDays: 10, sedex: 5590, sedexDays: 4 },
+  AP: { pac: 3690, pacDays: 12, sedex: 5990, sedexDays: 5 },
+  AM: { pac: 3690, pacDays: 12, sedex: 5990, sedexDays: 5 },
+  RR: { pac: 3890, pacDays: 14, sedex: 6290, sedexDays: 5 },
+  AC: { pac: 3890, pacDays: 14, sedex: 6290, sedexDays: 5 },
+  RO: { pac: 3690, pacDays: 12, sedex: 5990, sedexDays: 4 },
+  TO: { pac: 3290, pacDays: 9, sedex: 5290, sedexDays: 3 },
+  GO: { pac: 3290, pacDays: 9, sedex: 5290, sedexDays: 3 },
+  DF: { pac: 3290, pacDays: 9, sedex: 5290, sedexDays: 3 },
+  MT: { pac: 3490, pacDays: 10, sedex: 5590, sedexDays: 4 },
+  MS: { pac: 3490, pacDays: 10, sedex: 5590, sedexDays: 4 },
+  MG: { pac: 3190, pacDays: 8, sedex: 5090, sedexDays: 3 },
+  ES: { pac: 3190, pacDays: 8, sedex: 5090, sedexDays: 3 },
+  RJ: { pac: 3390, pacDays: 9, sedex: 5290, sedexDays: 3 },
+  SP: { pac: 3390, pacDays: 9, sedex: 5290, sedexDays: 3 },
+  PR: { pac: 3590, pacDays: 10, sedex: 5590, sedexDays: 3 },
+  SC: { pac: 3590, pacDays: 10, sedex: 5590, sedexDays: 3 },
+  RS: { pac: 3790, pacDays: 11, sedex: 5890, sedexDays: 4 },
+};
+
+const DEFAULT_ZONE = { pac: 3290, pacDays: 10, sedex: 5290, sedexDays: 4 };
+
+function fallbackByState(uf: string, multiplier: number) {
+  const zone = SHIPPING_TABLE[uf.toUpperCase()] ?? DEFAULT_ZONE;
+  return [
+    { code: "04510", name: "PAC", price: Math.round(zone.pac * multiplier), days: zone.pacDays },
+    { code: "04014", name: "SEDEX", price: Math.round(zone.sedex * multiplier), days: zone.sedexDays },
+  ];
+}
+
+async function calcMelhorEnvio(
+  originCep: string, destCep: string, weight: number
+): Promise<{ code: string; name: string; price: number; days: number }[]> {
+  const token = process.env.MELHORENVIO_TOKEN;
+  if (!token) return [];
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const res = await fetch(MELHORENVIO_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "User-Agent": "festival-store/1.0 (contato@btcgraffiti.com.br)",
+      },
+      body: JSON.stringify({
+        from: { postal_code: originCep },
+        to: { postal_code: destCep },
+        package: { height: 10, width: 15, length: 20, weight: Math.max(0.1, weight) },
+        options: { receipt: false, own_hand: false },
+        services: "1,2",
+      }),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+
+    return data
+      .filter((s: { error?: unknown; price?: string | number }) => !s.error && s.price)
+      .map((s: { id: number; name: string; price: string | number; delivery_time: number }) => ({
+        code: String(s.id),
+        name: s.name,
+        price: Math.round(Number(s.price) * 100),
+        days: s.delivery_time,
+      }));
+  } catch {
+    clearTimeout(timeout);
+    return [];
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { cep, items } = await req.json();
+    const { cep, items, uf } = await req.json();
     const dest = String(cep).replace(/\D/g, "");
     if (dest.length !== 8) {
       return NextResponse.json({ error: "CEP inválido" }, { status: 400 });
@@ -31,61 +118,14 @@ export async function POST(req: NextRequest) {
       }, 0)
       : 0.3;
 
-    const codes = SERVICES.map((s) => s.code).join(",");
+    const meResult = await calcMelhorEnvio(origem, dest, weight);
 
-    const params = new URLSearchParams({
-      nCdEmpresa: "",
-      sDsSenha: "",
-      nCdServico: codes,
-      sCepOrigem: origem,
-      sCepDestino: dest,
-      nVlPeso: String(Math.max(0.1, Math.round(weight * 10) / 10)),
-      nCdFormato: "1",
-      nVlComprimento: "20",
-      nVlAltura: "10",
-      nVlLargura: "15",
-      nVlDiametro: "0",
-      sCdMaoPropria: "n",
-      nVlValorDeclarado: "0",
-      sCdAvisoRecebimento: "n",
-      StrRetorno: "xml",
-      nIndicaCalculo: "3",
-    });
-
-    const res = await fetch(
-      `https://ws.correios.com.br/calculador/CalcPrecoPrazo.aspx?${params}`,
-      { cache: "no-store" }
-    );
-
-    if (!res.ok) throw new Error(`Correios API: ${res.status}`);
-
-    const xml = await res.text();
-
-    const parsed: { code: string; name: string; price: number; days: number }[] = [];
-
-    for (const match of Array.from(xml.matchAll(/<cServico>([\s\S]*?)<\/cServico>/g))) {
-      const block = match[1];
-      const code = block.match(/<Codigo>(.*?)<\/Codigo>/)?.[1]?.trim();
-      const priceStr = block.match(/<Valor>(.*?)<\/Valor>/)?.[1]?.trim();
-      const daysStr = block.match(/<PrazoEntrega>(.*?)<\/PrazoEntrega>/)?.[1]?.trim();
-      const errMsg = block.match(/<MsgErro>(.*?)<\/MsgErro>/)?.[1]?.trim();
-
-      if (!code || !priceStr || errMsg) continue;
-
-      const service = SERVICES.find((s) => s.code === code);
-      if (!service) continue;
-
-      const price = Math.round(parseFloat(priceStr.replace(",", ".")) * 100);
-      const days = parseInt(daysStr ?? "0", 10);
-
-      if (price > 0) parsed.push({ code, name: service.name, price, days });
+    if (meResult.length > 0) {
+      return NextResponse.json({ services: meResult, source: "melhorenvio" });
     }
 
-    if (parsed.length === 0) {
-      return NextResponse.json({ error: "Nenhuma opção de frete disponível para este CEP" }, { status: 422 });
-    }
-
-    return NextResponse.json({ services: parsed });
+    const weightMultiplier = Math.max(1, weight / 0.3);
+    return NextResponse.json({ services: fallbackByState(uf ?? "", weightMultiplier), source: "tabela" });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500 });
