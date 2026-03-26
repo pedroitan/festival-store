@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart";
 import Link from "next/link";
-import { ChevronRight, Loader2, Package, Truck } from "lucide-react";
+import { ChevronRight, Loader2, Package, Truck, MapPin } from "lucide-react";
 
 type AddressData = {
   logradouro: string;
@@ -46,6 +46,8 @@ export default function CheckoutPage() {
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const RETIRADA: ShippingOption = { code: 'retirada', name: 'Retirada em Salvador', price: 0, days: 0 };
 
   const subtotal = total();
   const shipping = selectedShipping?.price ?? 0;
@@ -194,35 +196,37 @@ export default function CheckoutPage() {
               <Field label="Complemento" value={form.complement} onChange={(v) => set("complement", v)} col2 />
             </div>
 
-            {/* Opções de frete */}
-            {shippingError && (
-              <p className="text-xs text-red-400 mt-2">{shippingError} — <button type="button" className="underline" onClick={() => calculateShipping(form.cep.replace(/\D/g, ""))}>Tentar novamente</button></p>
-            )}
-            {shippingOptions.length > 0 && (
-              <div className="mt-4 flex flex-col gap-2">
-                <p className="text-xs font-body font-medium uppercase tracking-widest text-text-muted">Opção de entrega</p>
-                {shippingOptions.map((opt) => (
-                  <button
-                    key={opt.code}
-                    type="button"
-                    onClick={() => setSelectedShipping(opt)}
-                    className={`flex items-center justify-between px-4 py-3 rounded-md border text-sm transition-colors ${selectedShipping?.code === opt.code
-                      ? "border-primary bg-primary/10 text-text"
-                      : "border-border bg-surface text-text-muted hover:border-primary/50"
-                      }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {opt.name === "SEDEX" ? <Truck size={15} /> : <Package size={15} />}
-                      <div className="text-left">
-                        <p className="font-semibold">{opt.name}</p>
-                        <p className="text-xs">{opt.days} dia{opt.days !== 1 ? "s" : ""} úteis</p>
-                      </div>
+            {/* Opções de entrega */}
+            <div className="mt-4 flex flex-col gap-2">
+              <p className="text-xs font-body font-medium uppercase tracking-widest text-text-muted">Opção de entrega</p>
+
+              {/* Retirada — sempre disponível */}
+              {[RETIRADA, ...shippingOptions].map((opt) => (
+                <button
+                  key={opt.code}
+                  type="button"
+                  onClick={() => setSelectedShipping(opt)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-md border text-sm transition-colors ${selectedShipping?.code === opt.code
+                    ? "border-primary bg-primary/10 text-text"
+                    : "border-border bg-surface text-text-muted hover:border-primary/50"
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {opt.code === 'retirada' ? <MapPin size={15} /> : opt.name === "SEDEX" ? <Truck size={15} /> : <Package size={15} />}
+                    <div className="text-left">
+                      <p className="font-semibold">{opt.name}</p>
+                      <p className="text-xs">{opt.code === 'retirada' ? 'Combinar local com o vendedor' : `${opt.days} dia${opt.days !== 1 ? 's' : ''} úteis`}</p>
                     </div>
-                    <span className="font-mono font-semibold">{formatPrice(opt.price / 100)}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+                  </div>
+                  <span className="font-mono font-semibold">{opt.price === 0 ? 'Grátis' : formatPrice(opt.price / 100)}</span>
+                </button>
+              ))}
+
+              {shippingError && (
+                <p className="text-xs text-red-400">{shippingError} — <button type="button" className="underline" onClick={() => calculateShipping(form.cep.replace(/\D/g, ""))}>Tentar novamente</button></p>
+              )}
+              {shippingLoading && <p className="text-xs text-text-muted">Calculando fretes…</p>}
+            </div>
           </section>
 
           {/* Pagamento */}
