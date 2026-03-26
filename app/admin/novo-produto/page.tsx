@@ -321,6 +321,8 @@ export default function NovoProductPage() {
                     <input
                       type="number"
                       value={m.price}
+                      step="0.01"
+                      min="0.01"
                       onChange={(e) =>
                         setMockups((prev) => ({ ...prev, [p.key]: { ...prev[p.key], price: Number(e.target.value) } }))
                       }
