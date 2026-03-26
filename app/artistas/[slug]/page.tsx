@@ -28,7 +28,7 @@ async function getArtistProducts(artistId: string, artistSlug: string, artistNam
     id: p.id,
     slug: p.slug,
     name: p.name,
-    price: Math.round(p.price / 100),
+    price: p.price / 100,
     category: p.category,
     imageUrl: p.image_url ?? "/produtos/placeholder.png",
     artistName,

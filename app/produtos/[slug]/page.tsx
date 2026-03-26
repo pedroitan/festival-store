@@ -25,7 +25,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         slug: product.slug,
         name: product.name,
         category: product.category,
-        price: Math.round(product.price / 100),
+        price: product.price / 100,
         imageUrl: product.image_url ?? "/produtos/placeholder.png",
         description: product.description ?? "",
         artist: artist
