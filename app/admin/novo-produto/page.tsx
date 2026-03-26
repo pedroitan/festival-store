@@ -24,6 +24,7 @@ type MockupState = {
   base64: string;
   mime: string;
   price: number;
+  priceStr: string;
   enabled: boolean;
   error?: string;
 };
@@ -68,7 +69,7 @@ export default function NovoProductPage() {
     Object.fromEntries(
       PRODUCTS.map((p) => [
         p.key,
-        { status: "idle", base64: "", mime: "image/png", price: p.price, enabled: true },
+        { status: "idle", base64: "", mime: "image/png", price: p.price, priceStr: String(p.price), enabled: true },
       ])
     )
   );
@@ -321,11 +322,16 @@ export default function NovoProductPage() {
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={m.price}
+                      value={m.priceStr}
                       onChange={(e) => {
-                        const val = e.target.value.replace(",", ".");
-                        const num = parseFloat(val);
-                        setMockups((prev) => ({ ...prev, [p.key]: { ...prev[p.key], price: isNaN(num) ? 0 : num } }));
+                        const raw = e.target.value;
+                        const num = parseFloat(raw.replace(",", "."));
+                        setMockups((prev) => ({ ...prev, [p.key]: { ...prev[p.key], priceStr: raw, price: isNaN(num) ? 0 : num } }));
+                      }}
+                      onBlur={(e) => {
+                        const num = parseFloat(e.target.value.replace(",", "."));
+                        const safe = isNaN(num) ? 0 : num;
+                        setMockups((prev) => ({ ...prev, [p.key]: { ...prev[p.key], priceStr: String(safe), price: safe } }));
                       }}
                       className="w-full bg-background border border-border rounded px-2 py-1 text-sm font-mono text-text focus:outline-none focus:border-primary"
                     />
