@@ -27,8 +27,34 @@ const neocrash = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Loja — Print-on-Demand",
-  description: "Arte original de grafiteiros brasileiros em produtos exclusivos.",
+  title: "BTC Festival Store — Arte Urbana em Produtos Exclusivos",
+  description: "Arte original de grafiteiros do Festival Bahia de Todas as Cores em camisetas, pôsteres e telas.",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
+  openGraph: {
+    title: "BTC Festival Store",
+    description: "Arte original de grafiteiros do Festival Bahia de Todas as Cores em camisetas, pôsteres e telas.",
+    url: "https://festival-store.vercel.app",
+    siteName: "BTC Festival Store",
+    images: [
+      {
+        url: "https://festival-store.vercel.app/og-image.png",
+        width: 630,
+        height: 840,
+        alt: "Bahia de Todas as Cores — Festival Store",
+      },
+    ],
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BTC Festival Store",
+    description: "Arte original de grafiteiros do Festival Bahia de Todas as Cores.",
+    images: ["https://festival-store.vercel.app/og-image.png"],
+  },
 };
 
 export default async function RootLayout({
